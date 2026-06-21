@@ -4,11 +4,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "injection-pii-guardrail-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "An MCP server providing prompt-injection detection, PII/secrets redaction, and an audit trail for AI agents."
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
     { name = "Naman" }
 ]
@@ -18,7 +18,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",

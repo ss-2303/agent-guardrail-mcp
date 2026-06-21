@@ -71,8 +71,12 @@ take effect immediately without reinstalling — this is what you want while
 iterating on detection patterns. `[dev]` pulls in `pytest` for the test
 suite.
 
-Requires Python 3.9+ (the codebase uses `from __future__ import annotations`
-for compatibility with pre-3.10 type hint syntax).
+Requires Python 3.10+. This floor is set by the `mcp` package itself —
+every released version of `mcp` (back to 0.9.1) requires Python >=3.10, so
+no version of this project can support anything older, regardless of our
+own code. (Our own detector/audit modules use
+`from __future__ import annotations` for forward compatibility, but that
+can't help with a dependency's own hard floor.)
 
 ### Where audit data is stored
 

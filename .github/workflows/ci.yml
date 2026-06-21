@@ -14,13 +14,14 @@ jobs:
 
     strategy:
       # Test across the Python versions we claim to support in pyproject.toml.
-      # This matters more than it might seem — we already hit one real
-      # version-specific bug locally (str | None syntax failing on 3.9)
-      # before adding the __future__ import fix. CI matrix testing is how
-      # you catch that class of bug automatically instead of via a user's
-      # bug report.
+      # Note: 3.9 is deliberately excluded — every released version of the
+      # `mcp` dependency (back to 0.9.1) requires Python >=3.10, so 3.9 can
+      # never satisfy our dependencies regardless of our own code's syntax
+      # compatibility. This was confirmed by an actual CI failure showing
+      # "ERROR: Could not find a version that satisfies the requirement
+      # mcp>=1.2.0" with every mcp version listed as Requires-Python >=3.10.
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
       fail-fast: false
 
     steps:
