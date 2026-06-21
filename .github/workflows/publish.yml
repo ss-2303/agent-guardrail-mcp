@@ -1,0 +1,65 @@
+name: Publish to PyPI
+
+# Triggered by pushing a version tag, e.g.:
+#   git tag v0.1.0
+#   git push origin v0.1.0
+#
+# This does NOT run on every push — only on an explicit tag push — so a
+# release is always a deliberate action, never an accident of merging to main.
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  # ─── Gate: tests must pass before we even consider publishing ───
+  #
+  # This re-runs the same checks as ci.yml. It's deliberately duplicated
+  # rather than just trusting that ci.yml already passed on this commit —
+  # a tag can in principle be pushed independently of the branch's CI
+  # history, so this job is the actual enforced gate for *this specific
+  # release*, not a rely-on-a-different-workflow assumption.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -e ".[dev]"
+      - run: pytest tests/test_detectors.py -v
+      - run: python3 eval/run_eval.py
+
+  # ─── Build and publish — only runs if `test` succeeded ───
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      # Required for PyPI's trusted publishing (OIDC) — no API token
+      # stored in GitHub secrets needed once this is configured on
+      # PyPI's side (Account Settings -> Publishing -> add this repo
+      # and workflow as a trusted publisher).
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build distribution
+        run: |
+          pip install build
+          python3 -m build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        # No `with: password:` needed if trusted publishing is configured.
+        # If you'd rather use a classic API token instead, add:
+        #   with:
+        #     password: ${{ secrets.PYPI_API_TOKEN }}
+        # and store PYPI_API_TOKEN as a repo secret.

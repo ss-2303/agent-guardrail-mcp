@@ -1,0 +1,51 @@
+name: CI
+
+# Run on every push to main, and on every pull request targeting main.
+# This is the safety net: no change lands without the test suite passing.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      # Test across the Python versions we claim to support in pyproject.toml.
+      # This matters more than it might seem — we already hit one real
+      # version-specific bug locally (str | None syntax failing on 3.9)
+      # before adding the __future__ import fix. CI matrix testing is how
+      # you catch that class of bug automatically instead of via a user's
+      # bug report.
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+      fail-fast: false
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install package with dev dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Run unit tests
+        run: pytest tests/test_detectors.py -v
+
+      - name: Run eval suite
+        run: python3 eval/run_eval.py
+
+      - name: Verify console script installs and launches without crashing
+        run: |
+          # Piping from /dev/null gives the server immediate EOF on stdin,
+          # so it exits cleanly (code 0) rather than hanging — there's no
+          # client to wait for. The thing we're actually checking is that
+          # importing and starting the server doesn't crash (no traceback,
+          # no non-zero exit from a missing dependency or import error).
+          injection-pii-guardrail-mcp < /dev/null
